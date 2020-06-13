@@ -17,6 +17,7 @@ contract Escrow {
         bool release_amount_seller;
         bool refund_amount_buyer;
         bool seller_response_within_time;
+        bool disputeCleared;
         bool available;
     }
 
@@ -34,7 +35,8 @@ contract Escrow {
             false, // no judge intervention by default
             false, // no release initiated
             false, // no refund initiated
-            false, // intially set to false
+            false, // Initially set to false
+            false, // Initially set to false
             true // product availability set as true
         );
     }
@@ -103,12 +105,21 @@ contract Escrow {
         EscrowProduct memory productModel = products[_id];
         require(productModel.judge_intervention = true,'Buyer needs to add dispute before judge clearing the dispute');
         require(productModel.seller_response_within_time = true,'Seller also needs to be in dispute before judge clearing the dispute');
-        productModel.judge = msg.sender; // Temporarirly fixing the judge by the one who initiates this transaction
+        productModel.judge = msg.sender; // Temporarily fixing the judge by the one who initiates this transaction
         if(_id == 0) {
             productModel.release_amount_seller = true; // In this condition seller can be able to withdraw his/her funds
         } else if(_id == 1) {
             productModel.refund_amount_buyer = true; // In this condition buyer can be able to withdraw his/her funds
         }
+        productModel.disputeCleared = true;  // After the judgement dispute has been resolved
         products[_id] = productModel;
+    }
+
+    function withdrawByJudge(uint _id) public payable {
+        EscrowProduct memory productModel = products[_id];
+        require(productModel.disputeCleared = true,'Dispute must be resolved');
+        require(productModel.judge == msg.sender,'Only judge of the current product can be able to execute this function');
+        uint256 judgeFee = 2 * productModel.judge_fee;
+        productModel.judge.transfer(judgeFee);
     }
 }
