@@ -37,6 +37,18 @@ contract Escrow {
         );
     }
 
-    function purchaseProduct()
+    function purchaseProduct(uint _id) public payable {
+        EscrowProduct memory productModel = products[_id];
+        require(productModel.available = true,'Product must be available for sale');
+        require(msg.value >= 0,'Smart contract value must  be greater than 0');
+
+        productModel.buyer = msg.sender; // Setting the buyer for the product
+
+        productModel.available = false;  //As buyer initiated this transaction this is set to false temporarily
+
+        productModel.dispute_time = now + 86400; // Dispute time initiated upto 24 hours from now
+
+        products[_id] = productModel; // changing the orginal product again by using memory
+    }
 
 }
