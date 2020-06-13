@@ -56,7 +56,7 @@ contract Escrow {
     function withdrawBySeller(uint _id) public payable {
         EscrowProduct memory productModel = products[_id];
         require(now > productModel.dispute_time,'Seller cant be able to withdraw his funds before dispute time');
-         address payable _seller = productModel.seller;
+        address payable _seller = productModel.seller;
         require(msg.sender == _seller,'Only sender can be able to perform this function');
         if(now > productModel.dispute_time && !productModel.judge_intervention) {
             productModel.release_amount_seller = true;
@@ -76,6 +76,16 @@ contract Escrow {
         require(now < productModel.dispute_time,'Buyer can only be able to rise the dispute within the dispute time');
         require(msg.value = productModel.judge_fee,'Buyer needs to pay the judge fee to create a dispute')
         productModel.judge_intervention = true;
+        products[_id] = productModel;
+    }
+
+    function participateInDisputeBySeller(uint _id) public payable {
+        EscrowProduct memory productModel = products[_id];
+        require(productModel.judge_intervention = true,'Buyer needs to add dispute before participating');
+        require(msg.value = productModel.judge_fee,'Seller needs to pay the judge fee to create a dispute')
+        address payable _seller = productModel.seller;
+        require(msg.sender == _seller,'Only sender can be able to perform this function');
+        productModel.seller_response_within_time = true;
         products[_id] = productModel;
     }
 
