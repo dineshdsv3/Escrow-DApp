@@ -74,7 +74,7 @@ contract Escrow {
         address payable _buyer = productModel.buyer;
         require(msg.sender == _buyer,'Only buyer can be able to rise the dispute');
         require(now < productModel.dispute_time,'Buyer can only be able to rise the dispute within the dispute time');
-        require(msg.value = productModel.judge_fee,'Buyer needs to pay the judge fee to create a dispute')
+        require(msg.value == productModel.judge_fee,'Buyer needs to pay the judge fee to create a dispute');
         productModel.judge_intervention = true;
         products[_id] = productModel;
     }
@@ -82,7 +82,7 @@ contract Escrow {
     function participateInDisputeBySeller(uint _id) public payable {
         EscrowProduct memory productModel = products[_id];
         require(productModel.judge_intervention = true,'Buyer needs to add dispute before participating');
-        require(msg.value = productModel.judge_fee,'Seller needs to pay the judge fee to create a dispute')
+        require(msg.value == productModel.judge_fee,'Seller needs to pay the judge fee to create a dispute');
         address payable _seller = productModel.seller;
         require(msg.sender == _seller,'Only sender can be able to perform this function');
         productModel.seller_response_within_time = true;
@@ -94,8 +94,21 @@ contract Escrow {
         address payable _buyer = productModel.buyer;
         require(msg.sender == _buyer,'Only buyer can be able to execute this function');
         require(productModel.release_amount_seller = true,'Release_amount must be true to withdraw the amount');
-        unit256 withdrawablebuyerAmount = productModel.amount + productModel.judge_fee;
+        uint256 withdrawablebuyerAmount = productModel.amount + productModel.judge_fee;
         productModel.buyer.transfer(withdrawablebuyerAmount); // Transfer product amount to the seller of the product
+        products[_id] = productModel;
+    }
+
+    function clearDispute(uint _id) public { // In the function we'll take 0 and 1 as arguments from front end
+        EscrowProduct memory productModel = products[_id];
+        require(productModel.judge_intervention = true,'Buyer needs to add dispute before judge clearing the dispute');
+        require(productModel.seller_response_within_time = true,'Seller also needs to be in dispute before judge clearing the dispute');
+        productModel.judge = msg.sender; // Temporarirly fixing the judge by the one who initiates this transaction
+        if(_id == 0) {
+            productModel.release_amount_seller = true; // In this condition seller can be able to withdraw his/her funds
+        } else if(_id == 1) {
+            productModel.refund_amount_buyer = true; // In this condition buyer can be able to withdraw his/her funds
+        }
         products[_id] = productModel;
     }
 }
