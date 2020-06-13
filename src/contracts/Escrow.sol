@@ -46,7 +46,7 @@ contract Escrow {
 
         productModel.available = false;  //As buyer initiated this transaction this is set to false temporarily
 
-        productModel.dispute_time = now + 40; // Dispute time initiated upto 24 hours from now
+        productModel.dispute_time = now + 400; // Dispute time initiated upto 24 hours from now
 
         products[_id] = productModel; // changing the orginal product again by using memory
     }
@@ -67,4 +67,12 @@ contract Escrow {
         productModel.seller.transfer(productModel.amount); // Transfer product amount to the seller of the product
     }
 
+    function createDispute(uint _id) public {
+        EscrowProduct memory productModel = products[_id];
+        address payable _buyer = productModel.buyer;
+        require(msg.sender == _buyer,'Only buyer can be able to rise the dispute');
+        require(now < productModel.dispute_time,'Buyer can only be able to rise the dispute within the dispute time');
+        productModel.judge_intervention = true;
+        products[_id] = productModel;
+    }
 }
