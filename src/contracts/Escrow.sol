@@ -16,6 +16,7 @@ contract Escrow {
         bool judge_intervention;
         bool release_amount_seller;
         bool refund_amount_buyer;
+        bool seller_response_within_time;
         bool available;
     }
 
@@ -33,6 +34,7 @@ contract Escrow {
             false, // no judge intervention by default
             false, // no release initiated
             false, // no refund initiated
+            false, // intially set to false
             true // product availability set as true
         );
     }
@@ -67,12 +69,23 @@ contract Escrow {
         productModel.seller.transfer(productModel.amount); // Transfer product amount to the seller of the product
     }
 
-    function createDispute(uint _id) public {
+    function createDispute(uint _id) public payable {
         EscrowProduct memory productModel = products[_id];
         address payable _buyer = productModel.buyer;
         require(msg.sender == _buyer,'Only buyer can be able to rise the dispute');
         require(now < productModel.dispute_time,'Buyer can only be able to rise the dispute within the dispute time');
+        require(msg.value = productModel.judge_fee,'Buyer needs to pay the judge fee to create a dispute')
         productModel.judge_intervention = true;
+        products[_id] = productModel;
+    }
+
+    function withdrawByBuyer(uint _id) public payable {
+        EscrowProduct memory productModel = products[_id];
+        address payable _buyer = productModel.buyer;
+        require(msg.sender == _buyer,'Only buyer can be able to execute this function');
+        require(productModel.release_amount_seller = true,'Release_amount must be true to withdraw the amount');
+        unit256 withdrawablebuyerAmount = productModel.amount + productModel.judge_fee;
+        productModel.buyer.transfer(withdrawablebuyerAmount); // Transfer product amount to the seller of the product
         products[_id] = productModel;
     }
 }
